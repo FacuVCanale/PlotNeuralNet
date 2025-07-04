@@ -261,7 +261,7 @@ def to_Dropout(name, offset="(0,0,0)", to="(0,0,0)", width=0.8, height=14, depth
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
         name=""" + name +r""",
-        caption=Dropout,
+        caption=Dropout \\"""+ str(DROPOUT_RATE) +r""",
         fill=\PoolColor,
         opacity=0.4,
         height="""+ str(height) +r""",
@@ -281,6 +281,22 @@ def to_Linear(name, nodes, in_dim, out_dim, offset="(0,0,0)", to="(0,0,0)", widt
         xlabel={{"""+ str(nodes) +""",}},
         zlabel="""+ str(out_dim) +r""",
         fill=\FcColor,
+        opacity=0.8,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
+def to_Pred(name, nodes, targets, offset="(0,0,0)", to="(0,0,0)", width=2, height=20, depth=10, caption=""):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption="""+ caption +r""",
+        xlabel={{"""+ str(nodes) +""",}},
+        zlabel="""+ str(targets) +r""",
+        fill=\SoftmaxColor,
         opacity=0.8,
         height="""+ str(height) +r""",
         width="""+ str(width) +r""",
@@ -601,7 +617,7 @@ arch.append(
 arch.append(to_connection(linear1_name, final_linear))
 
 # SoftMax / Predictions
-arch.append(to_SoftMax("predictions", NUM_TARGETS, offset="(2,0,0)", to=f"({final_linear}-east)", width=2, height=20, depth=8, caption="Pred"))
+arch.append(to_Pred("predictions", NUM_NODES, NUM_TARGETS, offset="(2,0,0)", to=f"({final_linear}-east)", width=4, height=20, depth=8, caption="Pred"))
 arch.append(to_connection(final_linear, "predictions"))
 
 arch.append(to_end())

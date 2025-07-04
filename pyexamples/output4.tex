@@ -171,7 +171,7 @@
 \pic[shift={(2,0,0)}] at (GELU_1-east) 
     {Box={
         name=Dropout_1,
-        caption=Dropout,
+        caption=Dropout \\0.05,
         fill=\PoolColor,
         opacity=0.4,
         height=14,
@@ -314,17 +314,16 @@
     };
 
 \draw [connection]  (linear1-east)    -- node {\midarrow} (linear_out-west);
-
 \pic[shift={(2,0,0)}] at (linear_out-east) 
     {Box={
         name=predictions,
         caption=Pred,
-        xlabel={{" ","dummy"}},
+        xlabel={{522,}},
         zlabel=1,
         fill=\SoftmaxColor,
         opacity=0.8,
         height=20,
-        width=2,
+        width=4,
         depth=8
         }
     };
