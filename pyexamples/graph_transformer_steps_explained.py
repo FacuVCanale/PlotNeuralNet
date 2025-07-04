@@ -47,6 +47,9 @@ D_HEAD_L2 = HIDDEN_DIM  # 64 per head
 NUM_TARGETS = 1
 DROPOUT_RATE = 0.05
 
+# Diagram layout parameters
+HORIZONTAL_SPACING = 2  # Horizontal spacing between components (was hardcoded as (3,0,0))
+
 def to_extended_colors():
     return r"""\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
 \def\ConvReluColor{rgb:yellow,5;red,5;white,5}
@@ -129,13 +132,22 @@ def to_lateral_connection(from_node, to_node, label="", pos=0.5):
 -| node[pos=""" + str(pos) + """] {\midarrow} """ + label_node + r""" (""" + to_node +r"""-north);
 """
 
+def to_lateral_connection_double_arrow(from_node, to_node, label="", pos=0.5, pos2=0.8):
+    label_node = ""
+    if label:
+        label_node = r"""node[pos=""" + str(pos) + r""",above] {\small """ + label + r"""}"""
+        
+    return r"""\draw [connection] (""" + from_node +r"""-east)
+-| node[pos=""" + str(pos) + """] {\midarrow} """ + label_node + r""" node[pos=""" + str(pos2) + """] {\midarrow} (""" + to_node +r"""-north);
+"""
+
 def to_residual_connection(from_node, to_node, pos=0.6):
     return r"""\draw [connection] (""" + from_node +r"""-east)
 -| node[pos=""" + str(pos) + """] {\midarrow} (""" + to_node +r"""-south);
 """
 
 def to_skip_input_connection(from_node, to_node, pos=0.6):
-    return r"""\draw [connection] (""" + from_node +r"""-south)
+    return r"""\draw [connection] (""" + from_node +r"""-east)
 |- node[pos=""" + str(pos) + """] {\midarrow} (""" + to_node +r"""-west);
 """
 
@@ -171,7 +183,7 @@ def to_HeadAverage(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2.5, 
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
         name=""" + name +r""",
-        caption=Head Average,
+        caption=Heads Avg,
         zlabel="""+ str(nodes) +r""" x """+ str(dim) +r""",
         fill=\ConvColor,
         opacity=0.7,
@@ -321,7 +333,7 @@ arch.append(
         NUM_FEATURES,
         D_HEAD_L1,
         NUM_HEADS_L1,
-        offset="(4,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({prev_layer}-east)",
         width=2,
         height=35,
@@ -338,7 +350,7 @@ arch.append(
         attention1_name,
         NUM_EDGES,
         NUM_HEADS_L1,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({qkv1_name}-east)",
         width=1.8,
         height=12,
@@ -348,7 +360,7 @@ arch.append(
 arch.append(to_connection(qkv1_name, attention1_name))
 
 # LATERAL CONNECTION: edge_index provides topology
-arch.append(to_lateral_connection("edge_index", attention1_name, "topology", 0.3))
+arch.append(to_lateral_connection_double_arrow("edge_index", attention1_name, "topology", 0.3, 0.7))
 
 # ===== STEP 2': m₁ mensajes agregados (Σ α·V) - (522 × 2 × 64) =====
 print("Step 2': m₁ mensajes agregados (Σ α·V) - (522 × 2 × 64)")
@@ -359,7 +371,7 @@ arch.append(
         NUM_NODES,
         NUM_HEADS_L1,
         D_HEAD_L1,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({attention1_name}-east)",
         width=3,
         height=25,
@@ -376,7 +388,7 @@ arch.append(
         head_avg1_name,
         NUM_NODES,
         HIDDEN_DIM,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({messages1_name}-east)",
         width=2.5,
         height=20,
@@ -422,7 +434,7 @@ arch.append(to_residual_connection(skip1_name, h1_name))
 
 # ===== STEP 4: BatchNorm 1 → GELU → Dropout =====
 print("Step 4: BatchNorm 1 → GELU → Dropout")
-arch.append(to_BatchNorm("BatchNorm_1", offset="(3,0,0)", to=f"({h1_name}-east)"))
+arch.append(to_BatchNorm("BatchNorm_1", offset=f"({HORIZONTAL_SPACING},0,0)", to=f"({h1_name}-east)"))
 arch.append(to_connection(h1_name, "BatchNorm_1"))
 arch.append(to_GELU("GELU_1", offset="(2,0,0)", to=f"(BatchNorm_1-east)"))
 arch.append(to_Dropout("Dropout_1", offset="(2,0,0)", to=f"(GELU_1-east)"))
@@ -456,7 +468,7 @@ arch.append(
         attention2_name,
         NUM_EDGES,
         NUM_HEADS_L2,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({qkv2_name}-east)",
         width=1.8,
         height=12,
@@ -466,7 +478,7 @@ arch.append(
 arch.append(to_connection(qkv2_name, attention2_name))
 
 # LATERAL CONNECTION: edge_index provides topology
-arch.append(to_lateral_connection("edge_index", attention2_name, "topology", 0.3))
+arch.append(to_lateral_connection_double_arrow("edge_index", attention2_name, "topology", 0.3, 0.7))
 
 # ===== STEP 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64) =====
 print("Step 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64)")
@@ -477,7 +489,7 @@ arch.append(
         NUM_NODES,
         NUM_HEADS_L2,
         D_HEAD_L2,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({attention2_name}-east)",
         width=3,
         height=25,
@@ -494,7 +506,7 @@ arch.append(
         head_avg2_name,
         NUM_NODES,
         HIDDEN_DIM,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({messages2_name}-east)",
         width=2.5,
         height=20,
@@ -541,7 +553,7 @@ arch.append(to_residual_connection(skip2_name, h2_name))
 
 # ===== STEP 8: BatchNorm 2 =====
 print("Step 8: BatchNorm 2")
-arch.append(to_BatchNorm("BatchNorm_2", offset="(3,0,0)", to=f"({h2_name}-east)"))
+arch.append(to_BatchNorm("BatchNorm_2", offset=f"({HORIZONTAL_SPACING},0,0)", to=f"({h2_name}-east)"))
 arch.append(to_connection(h2_name, "BatchNorm_2"))
 
 # ===== STEP 9: Linear 64 -> 32 =====
@@ -552,7 +564,7 @@ arch.append(
         linear1_name,
         HIDDEN_DIM,
         HIDDEN_DIM//2,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"(BatchNorm_2-east)",
         width=2,
         height=18,
@@ -569,7 +581,7 @@ arch.append(
         final_linear,
         HIDDEN_DIM//2,
         NUM_TARGETS,
-        offset="(3,0,0)",
+        offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({linear1_name}-east)",
         width=2,
         height=16,

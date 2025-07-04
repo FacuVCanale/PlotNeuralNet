@@ -56,7 +56,7 @@
         depth=12
         }
     };
-\pic[shift={(4,0,0)}] at (node_features-east) 
+\pic[shift={(2,0,0)}] at (node_features-east) 
     {RightBandedBox={
         name=qkv1,
         caption=QKV Transform,
@@ -69,7 +69,7 @@
     };
 
 \draw [connection]  (node_features-east)    -- node {\midarrow} (qkv1-west);
-\pic[shift={(3,0,0)}] at (qkv1-east) 
+\pic[shift={(2,0,0)}] at (qkv1-east) 
     {Ball={
         name=alpha1,
         caption=Attention,
@@ -82,8 +82,8 @@
 
 \draw [connection]  (qkv1-east)    -- node {\midarrow} (alpha1-west);
 \draw [connection] (edge_index-east)
--| node[pos=0.3] {\midarrow} node[pos=0.3,above] {\small topology} (alpha1-north);
-\pic[shift={(3,0,0)}] at (alpha1-east) 
+-| node[pos=0.3] {\midarrow} node[pos=0.3,above] {\small topology} node[pos=0.7] {\midarrow} (alpha1-north);
+\pic[shift={(2,0,0)}] at (alpha1-east) 
     {Box={
         name=messages1,
         caption=Messages,
@@ -97,10 +97,10 @@
     };
 
 \draw [connection]  (alpha1-east)    -- node {\midarrow} (messages1-west);
-\pic[shift={(3,0,0)}] at (messages1-east) 
+\pic[shift={(2,0,0)}] at (messages1-east) 
     {Box={
         name=head_avg1,
-        caption=Head Average,
+        caption=Heads Avg,
         zlabel=522 x 64,
         fill=\ConvColor,
         opacity=0.7,
@@ -123,7 +123,7 @@
         depth=20
         }
     };
-\draw [connection] (node_features-south)
+\draw [connection] (node_features-east)
 |- node[pos=0.6] {\midarrow} (skip1-west);
 \pic[shift={(2,0,0)}] at (head_avg1-east) 
     {Ball={
@@ -139,7 +139,7 @@
 \draw [connection]  (head_avg1-east)    -- node {\midarrow} (h1_output-west);
 \draw [connection] (skip1-east)
 -| node[pos=0.6] {\midarrow} (h1_output-south);
-\pic[shift={(3,0,0)}] at (h1_output-east) 
+\pic[shift={(2,0,0)}] at (h1_output-east) 
     {Box={
         name=BatchNorm_1,
         caption=BatchNorm,
@@ -191,7 +191,7 @@
     };
 
 \draw [connection]  (Dropout_1-east)    -- node {\midarrow} (qkv2-west);
-\pic[shift={(3,0,0)}] at (qkv2-east) 
+\pic[shift={(2,0,0)}] at (qkv2-east) 
     {Ball={
         name=alpha2,
         caption=Attention,
@@ -204,8 +204,8 @@
 
 \draw [connection]  (qkv2-east)    -- node {\midarrow} (alpha2-west);
 \draw [connection] (edge_index-east)
--| node[pos=0.3] {\midarrow} node[pos=0.3,above] {\small topology} (alpha2-north);
-\pic[shift={(3,0,0)}] at (alpha2-east) 
+-| node[pos=0.3] {\midarrow} node[pos=0.3,above] {\small topology} node[pos=0.7] {\midarrow} (alpha2-north);
+\pic[shift={(2,0,0)}] at (alpha2-east) 
     {Box={
         name=messages2,
         caption=Messages,
@@ -219,10 +219,10 @@
     };
 
 \draw [connection]  (alpha2-east)    -- node {\midarrow} (messages2-west);
-\pic[shift={(3,0,0)}] at (messages2-east) 
+\pic[shift={(2,0,0)}] at (messages2-east) 
     {Box={
         name=head_avg2,
-        caption=Head Average,
+        caption=Heads Avg,
         zlabel=522 x 64,
         fill=\ConvColor,
         opacity=0.7,
@@ -245,7 +245,7 @@
         depth=20
         }
     };
-\draw [connection] (Dropout_1-south)
+\draw [connection] (Dropout_1-east)
 |- node[pos=0.6] {\midarrow} (skip2-west);
 \pic[shift={(2,0,0)}] at (head_avg2-east) 
     {Ball={
@@ -261,7 +261,7 @@
 \draw [connection]  (head_avg2-east)    -- node {\midarrow} (h2_output-west);
 \draw [connection] (skip2-east)
 -| node[pos=0.6] {\midarrow} (h2_output-south);
-\pic[shift={(3,0,0)}] at (h2_output-east) 
+\pic[shift={(2,0,0)}] at (h2_output-east) 
     {Box={
         name=BatchNorm_2,
         caption=BatchNorm,
@@ -274,7 +274,7 @@
     };
 
 \draw [connection]  (h2_output-east)    -- node {\midarrow} (BatchNorm_2-west);
-\pic[shift={(3,0,0)}] at (BatchNorm_2-east) 
+\pic[shift={(2,0,0)}] at (BatchNorm_2-east) 
     {Box={
         name=linear1,
         caption=Linear,
@@ -288,7 +288,7 @@
     };
 
 \draw [connection]  (BatchNorm_2-east)    -- node {\midarrow} (linear1-west);
-\pic[shift={(3,0,0)}] at (linear1-east) 
+\pic[shift={(2,0,0)}] at (linear1-east) 
     {Box={
         name=linear_out,
         caption=Linear,
