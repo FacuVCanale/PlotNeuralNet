@@ -196,12 +196,13 @@ def to_Messages(name, nodes, heads, dim, offset="(0,0,0)", to="(0,0,0)", width=3
     };
 """
 
-def to_SkipConnection(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2, height=15, depth=15):
+def to_SkipConnection(name, feats, dim, offset="(0,0,0)", to="(0,0,0)", width=2, height=15, depth=15):
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
         name=""" + name +r""",
         caption=Skip Connection,
-        zlabel="""+ str(nodes) +r""" x """+ str(dim) +r""",
+        xlabel={{"""+ str(feats) +""",}},
+        zlabel="""+ str(dim) +r""",
         fill=\PoolColor,
         opacity=0.6,
         height="""+ str(height) +r""",
@@ -405,7 +406,7 @@ skip1_name = "skip1"
 arch.append(
     to_SkipConnection(
         skip1_name,
-        NUM_NODES,
+        NUM_FEATURES,
         HIDDEN_DIM,
         offset="(0,-6,0)",
         to=f"({head_avg1_name}-south)",
@@ -523,7 +524,7 @@ skip2_name = "skip2"
 arch.append(
     to_SkipConnection(
         skip2_name,
-        NUM_NODES,
+        NUM_FEATURES,
         HIDDEN_DIM,
         offset="(0,-6,0)",
         to=f"({head_avg2_name}-south)",
