@@ -13,24 +13,22 @@ from pycore.tikzeng import *
 # =============================================================
 
 # Architecture parameters matching your GTN class
-NUM_FEATURES = 522      # input features per node
-NUM_NODES = 22          # number of graph nodes
+NUM_NODES = 522      # input features per node
+NUM_FEATURES = 22          # number of graph nodes
 HIDDEN_DIM = 64         # hidden dimension (d_model)
-NUM_HEADS = 8           # attention heads (matching your GTN default)
-NUM_LAYERS = 3          # total TransformerConv layers (matching your GTN default)
+NUM_HEADS = 2           # attention heads (matching your GTN default)
+NUM_LAYERS = 2          # total TransformerConv layers (matching your GTN default)
 NUM_TARGETS = 1         # output targets (matching your GTN default)
-DROPOUT_RATE = 0.2      # dropout rate
+DROPOUT_RATE = 0.05      # dropout rate
 
 # Custom component functions
-def to_BatchNorm(name, size, offset="(0,0,0)", to="(0,0,0)", width=1, height=15, depth=15):
-    """Create a BatchNorm component"""
+def to_BatchNorm(name, offset="(0,0,0)", to="(0,0,0)", width=1, height=15, depth=15):
+    """Create a BatchNorm component (no size/xlabel)"""
     return r"""
 \pic[shift={"""+ offset +"""}] at """+ to +""" 
     {Box={
         name=""" + name +""",
         caption=BatchNorm,
-        xlabel={{"""+ str(size) +r""",}},
-        zlabel=" ",
         fill=\FcColor,
         opacity=0.6,
         height="""+ str(height) +""",
@@ -48,7 +46,6 @@ def to_Activation(name, activation_type="GELU", offset="(0,0,0)", to="(0,0,0)", 
         name=""" + name +""",
         caption="""+ activation_type +r""",
         xlabel={{" ","dummy"}},
-        zlabel=" ",
         fill=\FcReluColor,
         opacity=0.8,
         height="""+ str(height) +""",
@@ -66,7 +63,6 @@ def to_Dropout(name, rate=0.2, offset="(0,0,0)", to="(0,0,0)", width=0.5, height
         name=""" + name +""",
         caption=Dropout\\\\""" + str(rate) + r""",
         xlabel={{" ","dummy"}},
-        zlabel=" ",
         fill=\PoolColor,
         opacity=0.4,
         height="""+ str(height) +""",
@@ -78,14 +74,14 @@ def to_Dropout(name, rate=0.2, offset="(0,0,0)", to="(0,0,0)", width=0.5, height
 
 def to_TransformerConv(name, in_dim, out_dim, heads, offset="(0,0,0)", to="(0,0,0)", width=4, height=25, depth=25):
     """Create a TransformerConv layer with detailed caption"""
-    caption = f"TransformerConv\\\\[-8pt]{in_dim}->{out_dim}\\\\[-8pt]{heads} head{'s' if heads > 1 else ''}"
+    caption = f"T.Conv {heads} head{'' if heads == 1 else 's'}\\\\[-25cm]~"
     return r"""
 \pic[shift={"""+ offset +"""}] at """+ to +""" 
     {Box={
         name=""" + name +""",
         caption="""+ caption +r""",
-        xlabel={{"""+ str(out_dim) +r""",}},
-        zlabel="""+ str(in_dim) +r""",
+        xlabel={{"""+ str(in_dim) +r""",}},
+        zlabel="""+ str(out_dim) +r""",
         fill=\ConvColor,
         height="""+ str(height) +""",
         width="""+ str(width) +""",
@@ -100,10 +96,27 @@ def to_Linear(name, in_dim, out_dim, offset="(0,0,0)", to="(0,0,0)", width=2, he
 \pic[shift={"""+ offset +"""}] at """+ to +""" 
     {Box={
         name=""" + name +""",
-        caption=Linear\\\\""" + str(in_dim) + "->" + str(out_dim) + r""",
-        xlabel={{"""+ str(out_dim) +r""",}},
-        zlabel="""+ str(in_dim) +r""",
+        caption=Linear\\\\""" + str(in_dim) + "x" + str(out_dim) + r""",
+        xlabel={{"""+ str(in_dim) +r""",}},
+        zlabel="""+ str(out_dim) +r""",
         fill=\FcColor,
+        height="""+ str(height) +""",
+        width="""+ str(width) +""",
+        depth="""+ str(depth) +"""
+        }
+    };
+"""
+
+def to_Output(name, s_filer=10, n_filer=" ", offset="(0,0,0)", to="(0,0,0)", width=1.5, height=3, depth=25, opacity=0.8, caption=" " ):
+    return r"""
+\pic[shift={"""+ offset +"""}] at """+ to +""" 
+    {Box={
+        name=""" + name +""",
+        caption="""+ caption +""",
+        xlabel={{""" + str(n_filer) + r""", "dummy"}},
+        zlabel="""+ str(s_filer) +""",
+        fill=\SoftmaxColor,
+        opacity="""+ str(opacity) +""",
         height="""+ str(height) +""",
         width="""+ str(width) +""",
         depth="""+ str(depth) +"""
@@ -122,14 +135,14 @@ arch = [
 arch.append(
     to_Conv(
         "input",
-        s_filer=NUM_NODES,
-        n_filer=NUM_FEATURES,
+        s_filer=NUM_FEATURES,
+        n_filer=NUM_NODES,
         offset="(0,0,0)",
         to="(0,0,0)",
         height=50,
         width=6,
         depth=50,
-        caption=f"Station Graph\\\\[-8pt]{NUM_NODES} nodes\\\\[-8pt]{NUM_FEATURES} features",
+        caption=f"Station Graph\\\\[0pt]{NUM_NODES} nodes\\\\[0pt]{NUM_FEATURES} features\\\\[-5cm]~",
     )
 )
 
@@ -156,7 +169,6 @@ bn_name = "bn1"
 arch.append(
     to_BatchNorm(
         bn_name,
-        HIDDEN_DIM,
         offset="(1.5,0,0)",
         to=f"({layer_name}-east)",
         width=1,
@@ -220,7 +232,6 @@ if NUM_LAYERS > 2:
     arch.append(
         to_BatchNorm(
             bn_name,
-            HIDDEN_DIM,
             offset="(1.5,0,0)",
             to=f"({layer_name}-east)",
             width=1,
@@ -283,7 +294,6 @@ bn_final_name = "bn_final"
 arch.append(
     to_BatchNorm(
         bn_final_name,
-        HIDDEN_DIM,
         offset="(1.5,0,0)",
         to=f"({layer_name}-east)",
         width=1,
@@ -357,15 +367,16 @@ arch.append(to_connection(mlp_dropout_name, mlp2_name))
 
 # Output prediction
 arch.append(
-    to_SoftMax(
+    to_Output(
         "output",
         NUM_TARGETS,
+        n_filer=NUM_NODES,
         offset="(2,0,0)",
         to=f"({mlp2_name}-east)",
-        width=1.5,
+        width=2,
         height=40,
         depth=8,
-        caption="Bike Demand\\\\Prediction",
+        caption="Arrivals",
     )
 )
 arch.append(to_connection(mlp2_name, "output"))
