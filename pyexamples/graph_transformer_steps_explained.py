@@ -121,8 +121,8 @@ def to_EdgeTransform(name, in_dim, out_dim, heads, offset="(0,0,0)", to="(0,0,0)
 """
 
 def to_lateral_connection(from_node, to_node, label="", pos=0.5):
-    return r"""\draw [copyconnection] (""" + from_node +r"""-north) 
--- node[pos=""" + str(pos) + r""",above,sloped] {\small """ + label + r"""} (""" + to_node +r"""-north);
+    return r"""\draw [connection] (""" + from_node +r"""-east)
+-| node[pos=""" + str(pos) + """] {\midarrow} node[pos=""" + str(pos) + r""",above] {\small """ + label + r"""} (""" + to_node +r"""-north);
 """
 
 def to_AttentionCoeff(name, num_edges, heads, offset="(0,0,0)", to="(0,0,0)", width=2, height=12, depth=18):

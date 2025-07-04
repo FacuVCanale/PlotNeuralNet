@@ -81,8 +81,8 @@
     };
 
 \draw [connection]  (qkv1-east)    -- node {\midarrow} (alpha1-west);
-\draw [copyconnection] (edge_index-north) 
--- node[pos=0.3,above,sloped] {\small topology} (alpha1-north);
+\draw [connection] (edge_index-north)
+-| node[pos=0.3] {\midarrow} node[pos=0.3,above] {\small topology} (alpha1-north);
 \pic[shift={(3,0,0)}] at (alpha1-east) 
     {Box={
         name=messages1,
