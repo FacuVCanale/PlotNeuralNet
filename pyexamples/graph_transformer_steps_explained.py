@@ -68,7 +68,7 @@ def to_EdgeIndex(name, num_edges, offset="(0,0,0)", to="(0,0,0)", width=1, heigh
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
         name=""" + name +r""",
-        caption=Edge Indexes,
+        caption=Edge Idxs,
         zlabel="""+ str(num_edges) +r""",
         fill=\GraphColor,
         opacity=0.7,
@@ -94,11 +94,13 @@ def to_EdgeInput(name, num_edges, edge_dim, offset="(0,0,0)", to="(0,0,0)", widt
     };
 """
 
-def to_QKV_WithEdges(name_prefix, in_dim, out_dim, heads, offset="(0,0,0)", to="(0,0,0)", width=2, height=25, depth=20):
+def to_QKV_WithEdges(name_prefix, nodes, in_dim, out_dim, heads, offset="(0,0,0)", to="(0,0,0)", width=2, height=25, depth=20):
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {RightBandedBox={
         name=""" + name_prefix + r""",
-        caption=QKV Transform,
+        caption=QKV Transform ,
+        xlabel={{ ,""" + f" {str(nodes)} ," + r"""}},
+        zlabel="""+ str(out_dim) +r""",
         fill=\ConvColor,
         bandfill=\ConvReluColor,
         height="""+ str(height) +r""",
@@ -333,6 +335,7 @@ qkv1_name = "qkv1"
 arch.append(
     to_QKV_WithEdges(
         qkv1_name,
+        NUM_NODES,
         NUM_FEATURES,
         D_HEAD_L1,
         NUM_HEADS_L1,
@@ -451,6 +454,7 @@ qkv2_name = "qkv2"
 arch.append(
     to_QKV_WithEdges(
         qkv2_name,
+        NUM_NODES,
         HIDDEN_DIM,
         D_HEAD_L2,
         NUM_HEADS_L2,
