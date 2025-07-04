@@ -273,11 +273,12 @@ def to_Dropout(name, offset="(0,0,0)", to="(0,0,0)", width=0.8, height=14, depth
 
 # --- NEW: Linear block ---
 
-def to_Linear(name, in_dim, out_dim, offset="(0,0,0)", to="(0,0,0)", width=2, height=18, depth=15):
+def to_Linear(name, nodes, in_dim, out_dim, offset="(0,0,0)", to="(0,0,0)", width=2, height=18, depth=15):
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
         name=""" + name +r""",
-        caption=Linear,
+        caption=Linear ("""+ str(in_dim) +r""" $\to$ """+ str(out_dim) +r"""),
+        xlabel={{"""+ str(nodes) +""",}},
         zlabel="""+ str(out_dim) +r""",
         fill=\FcColor,
         opacity=0.8,
@@ -569,11 +570,12 @@ linear1_name = "linear1"
 arch.append(
     to_Linear(
         linear1_name,
+        NUM_NODES,
         HIDDEN_DIM,
         HIDDEN_DIM//2,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"(BatchNorm_2-east)",
-        width=2,
+        width=4,
         height=18,
         depth=15
     )
@@ -586,11 +588,12 @@ final_linear = "linear_out"
 arch.append(
     to_Linear(
         final_linear,
+        NUM_NODES,
         HIDDEN_DIM//2,
         NUM_TARGETS,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({linear1_name}-east)",
-        width=2,
+        width=4,
         height=16,
         depth=10
     )
