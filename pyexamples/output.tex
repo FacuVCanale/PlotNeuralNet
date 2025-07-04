@@ -24,61 +24,250 @@
 \pic[shift={(0,0,0)}] at (0,0,0) 
     {Box={
         name=input,
-        caption=Station Graph\\[-5cm]~,
+        caption=Station Graph\\[-8pt]22 nodes\\[-8pt]522 features,
         xlabel={{522, }},
         zlabel=22,
         fill=\ConvColor,
-        height=60,
-        width=5,
-        depth=60
+        height=50,
+        width=6,
+        depth=50
         }
     };
 
-\pic[shift={(2,0,0)}] at (input-east) 
+\pic[shift={(3,0,0)}] at (input-east) 
     {Box={
         name=trconv1,
-        caption=T.Conv 2 heads\\[-25cm]~,
-        xlabel={{64, }},
-        zlabel=64,
+        caption=TransformerConv\\[-8pt]522->64\\[-8pt]8 heads,
+        xlabel={{64,}},
+        zlabel=522,
         fill=\ConvColor,
-        height=20,
-        width=5,
-        depth=20
+        height=30,
+        width=4,
+        depth=30
         }
     };
 
 \draw [connection]  (input-east)    -- node {\midarrow} (trconv1-west);
 
-\pic[shift={(2,0,0)}] at (trconv1-east) 
+\pic[shift={(1.5,0,0)}] at (trconv1-east) 
     {Box={
-        name=trconv2,
-        caption=T.Conv 2 heads\\[-25cm]~,
-        xlabel={{64, }},
-        zlabel=64,
-        fill=\ConvColor,
+        name=bn1,
+        caption=BatchNorm,
+        xlabel={{64,}},
+        zlabel=" ",
+        fill=\FcColor,
+        opacity=0.6,
+        height=25,
+        width=1,
+        depth=25
+        }
+    };
+
+\draw [connection]  (trconv1-east)    -- node {\midarrow} (bn1-west);
+
+\pic[shift={(1.2,0,0)}] at (bn1-east) 
+    {Box={
+        name=gelu1,
+        caption=GELU,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\FcReluColor,
+        opacity=0.8,
         height=20,
-        width=5,
+        width=1,
         depth=20
         }
     };
 
-\draw [connection]  (trconv1-east)    -- node {\midarrow} (trconv2-west);
+\draw [connection]  (bn1-east)    -- node {\midarrow} (gelu1-west);
 
-\pic[shift={(2,0,0)}] at (trconv2-east) 
+\pic[shift={(1.0,0,0)}] at (gelu1-east) 
     {Box={
-        name=pred,
-        caption=Arrivals\\[-5cm]~,
-        xlabel={{522, }},
-        zlabel=1,
-        fill=\SoftmaxColor,
+        name=dropout1,
+        caption=Dropout\\0.2,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\PoolColor,
+        opacity=0.4,
+        height=15,
+        width=0.5,
+        depth=15
+        }
+    };
+
+\draw [connection]  (gelu1-east)    -- node {\midarrow} (dropout1-west);
+
+\pic[shift={(3,0,0)}] at (dropout1-east) 
+    {Box={
+        name=trconv2,
+        caption=TransformerConv\\[-8pt]64->64\\[-8pt]8 heads,
+        xlabel={{64,}},
+        zlabel=64,
+        fill=\ConvColor,
+        height=25,
+        width=4,
+        depth=25
+        }
+    };
+
+\draw [connection]  (dropout1-east)    -- node {\midarrow} (trconv2-west);
+
+\pic[shift={(1.5,0,0)}] at (trconv2-east) 
+    {Box={
+        name=bn2,
+        caption=BatchNorm,
+        xlabel={{64,}},
+        zlabel=" ",
+        fill=\FcColor,
+        opacity=0.6,
+        height=20,
+        width=1,
+        depth=20
+        }
+    };
+
+\draw [connection]  (trconv2-east)    -- node {\midarrow} (bn2-west);
+
+\pic[shift={(1.2,0,0)}] at (bn2-east) 
+    {Box={
+        name=gelu2,
+        caption=GELU,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\FcReluColor,
         opacity=0.8,
-        height=60,
-        width=2,
+        height=18,
+        width=1,
+        depth=18
+        }
+    };
+
+\draw [connection]  (bn2-east)    -- node {\midarrow} (gelu2-west);
+
+\pic[shift={(1.0,0,0)}] at (gelu2-east) 
+    {Box={
+        name=dropout2,
+        caption=Dropout\\0.2,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\PoolColor,
+        opacity=0.4,
+        height=15,
+        width=0.5,
+        depth=15
+        }
+    };
+
+\draw [connection]  (gelu2-east)    -- node {\midarrow} (dropout2-west);
+
+\pic[shift={(3,0,0)}] at (dropout2-east) 
+    {Box={
+        name=trconv_final,
+        caption=TransformerConv\\[-8pt]64->64\\[-8pt]1 head,
+        xlabel={{64,}},
+        zlabel=64,
+        fill=\ConvColor,
+        height=25,
+        width=4,
+        depth=25
+        }
+    };
+
+\draw [connection]  (dropout2-east)    -- node {\midarrow} (trconv_final-west);
+
+\pic[shift={(1.5,0,0)}] at (trconv_final-east) 
+    {Box={
+        name=bn_final,
+        caption=BatchNorm,
+        xlabel={{64,}},
+        zlabel=" ",
+        fill=\FcColor,
+        opacity=0.6,
+        height=20,
+        width=1,
+        depth=20
+        }
+    };
+
+\draw [connection]  (trconv_final-east)    -- node {\midarrow} (bn_final-west);
+
+\pic[shift={(3,0,0)}] at (bn_final-east) 
+    {Box={
+        name=mlp1,
+        caption=Linear\\64->32,
+        xlabel={{32,}},
+        zlabel=64,
+        fill=\FcColor,
+        height=20,
+        width=2.5,
+        depth=15
+        }
+    };
+
+\draw [connection]  (bn_final-east)    -- node {\midarrow} (mlp1-west);
+
+\pic[shift={(1.2,0,0)}] at (mlp1-east) 
+    {Box={
+        name=mlp_gelu,
+        caption=GELU,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\FcReluColor,
+        opacity=0.8,
+        height=15,
+        width=1,
+        depth=12
+        }
+    };
+
+\draw [connection]  (mlp1-east)    -- node {\midarrow} (mlp_gelu-west);
+
+\pic[shift={(1.0,0,0)}] at (mlp_gelu-east) 
+    {Box={
+        name=mlp_dropout,
+        caption=Dropout\\0.2,
+        xlabel={{" ","dummy"}},
+        zlabel=" ",
+        fill=\PoolColor,
+        opacity=0.4,
+        height=12,
+        width=0.5,
         depth=10
         }
     };
 
-\draw [connection]  (trconv2-east)    -- node {\midarrow} (pred-west);
+\draw [connection]  (mlp_gelu-east)    -- node {\midarrow} (mlp_dropout-west);
+
+\pic[shift={(2,0,0)}] at (mlp_dropout-east) 
+    {Box={
+        name=mlp2,
+        caption=Linear\\32->1,
+        xlabel={{1,}},
+        zlabel=32,
+        fill=\FcColor,
+        height=15,
+        width=2,
+        depth=8
+        }
+    };
+
+\draw [connection]  (mlp_dropout-east)    -- node {\midarrow} (mlp2-west);
+
+\pic[shift={(2,0,0)}] at (mlp2-east) 
+    {Box={
+        name=output,
+        caption=Bike Demand\\Prediction,
+        xlabel={{" ","dummy"}},
+        zlabel=1,
+        fill=\SoftmaxColor,
+        opacity=0.8,
+        height=40,
+        width=1.5,
+        depth=8
+        }
+    };
+
+\draw [connection]  (mlp2-east)    -- node {\midarrow} (output-west);
 
 \end{tikzpicture}
 \end{document}
