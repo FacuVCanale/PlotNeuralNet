@@ -164,21 +164,6 @@ def to_AttentionCoeff(name, num_edges, heads, offset="(0,0,0)", to="(0,0,0)", wi
     };
 """
 
-def to_Messages(name, nodes, heads, dim, offset="(0,0,0)", to="(0,0,0)", width=3, height=20, depth=25):
-    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
-    {Box={
-        name=""" + name +r""",
-        caption=Messages,
-        zlabel="""+ str(nodes) +r""" x """+ str(heads) +r""" x """+ str(dim) +r""",
-        fill=\AttentionColor,
-        opacity=0.6,
-        height="""+ str(height) +r""",
-        width="""+ str(width) +r""",
-        depth="""+ str(depth) +r"""
-        }
-    };
-"""
-
 def to_HeadAverage(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2.5, height=18, depth=20):
     return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
     {Box={
@@ -187,6 +172,21 @@ def to_HeadAverage(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2.5, 
         zlabel="""+ str(nodes) +r""" x """+ str(dim) +r""",
         fill=\ConvColor,
         opacity=0.7,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
+def to_Messages(name, nodes, heads, dim, offset="(0,0,0)", to="(0,0,0)", width=3, height=20, depth=25):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption=Messages ("""+ str(heads) +r""" heads),
+        zlabel="""+ str(nodes) +r""" x """+ str(heads) +r""" x """+ str(dim) +r""",
+        fill=\AttentionColor,
+        opacity=0.6,
         height="""+ str(height) +r""",
         width="""+ str(width) +r""",
         depth="""+ str(depth) +r"""
@@ -373,7 +373,7 @@ arch.append(
         D_HEAD_L1,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({attention1_name}-east)",
-        width=3,
+        width=4,
         height=25,
         depth=30
     )
@@ -407,7 +407,7 @@ arch.append(
         HIDDEN_DIM,
         offset="(0,-6,0)",
         to=f"({head_avg1_name}-south)",
-        width=2,
+        width=4,
         height=15,
         depth=20
     )
@@ -491,7 +491,7 @@ arch.append(
         D_HEAD_L2,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({attention2_name}-east)",
-        width=3,
+        width=4,
         height=25,
         depth=30
     )
@@ -525,7 +525,7 @@ arch.append(
         HIDDEN_DIM,
         offset="(0,-6,0)",
         to=f"({head_avg2_name}-south)",
-        width=2,
+        width=4,
         height=15,
         depth=20
     )
