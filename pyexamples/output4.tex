@@ -1,0 +1,172 @@
+
+\documentclass[border=8pt, multi, tikz]{standalone} 
+\usepackage{import}
+\subimport{../layers/}{init}
+\usetikzlibrary{positioning}
+\usetikzlibrary{3d} %for including external image 
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
+\def\FcColor{rgb:blue,5;red,2.5;white,5}
+\def\FcReluColor{rgb:blue,5;red,5;white,4}
+\def\SoftmaxColor{rgb:magenta,5;black,7}   
+\def\SumColor{rgb:blue,5;green,15}
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\UnpoolColor{rgb:blue,2;green,1;black,0.3}
+\def\FcColor{rgb:blue,2;green,5;white,5}
+\def\FcReluColor{rgb:blue,2;green,5;white,4}
+\def\SoftmaxColor{rgb:magenta,5;black,7}
+\def\EdgeColor{rgb:green,8;blue,2;white,3}
+\def\EdgeReluColor{rgb:green,8;blue,5;white,2}
+\def\AttentionColor{rgb:orange,6;red,3;white,3}
+\def\GraphColor{rgb:purple,5;blue,3;white,4}
+
+\newcommand{\copymidarrow}{\tikz \draw[-Stealth,line width=0.8mm,draw={rgb:blue,4;red,1;green,1;black,3}] (-0.3,0) -- ++(0.3,0);}
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+\tikzstyle{copyconnection}=[ultra thick,every node/.style={sloped,allow upside down},draw={rgb:blue,4;red,1;green,1;black,3},opacity=0.7]
+
+\pic[shift={(0,0,0)}] at (0,0,0) 
+    {Box={
+        name=node_features,
+        caption=Node Features,
+        xlabel={{522, }},
+        zlabel=22,
+        fill=\ConvColor,
+        height=45,
+        width=6,
+        depth=45
+        }
+    };
+\pic[shift={(0,8,0)}] at (node_features-north) 
+    {Box={
+        name=edge_index,
+        caption=Edge Indexes,
+        zlabel=5,
+        fill=\GraphColor,
+        opacity=0.7,
+        height=8,
+        width=1,
+        depth=12
+        }
+    };
+\pic[shift={(0,-8,0)}] at (node_features-south) 
+    {Box={
+        name=edge_attr,
+        caption=Edge Features,
+        zlabel=64,
+        fill=\EdgeColor,
+        opacity=0.8,
+        height=12,
+        width=2,
+        depth=18
+        }
+    };
+\pic[shift={(4,0,0)}] at (node_features-east) 
+    {RightBandedBox={
+        name=qkv1,
+        caption=QKV Transform,
+        fill=\ConvColor,
+        bandfill=\ConvReluColor,
+        height=35,
+        width={2,2,2},
+        depth=30
+        }
+    };
+
+\draw [connection]  (node_features-east)    -- node {\midarrow} (qkv1-west);
+\pic[shift={(2,-6,0)}] at (qkv1-south) 
+    {Box={
+        name=edge_w6_1,
+        caption=Edge Transform,
+        zlabel=128,
+        fill=\EdgeColor,
+        opacity=0.7,
+        height=15,
+        width=1.5,
+        depth=12
+        }
+    };
+
+\draw [connection]  (edge_attr-east)    -- node {\midarrow} (edge_w6_1-west);
+\draw [copyconnection] (edge_w6_1-north) 
+-- node[pos=0.7,above,sloped] {\small add to K,V} (qkv1-north);
+\pic[shift={(3,0,0)}] at (qkv1-east) 
+    {Ball={
+        name=alpha1,
+        caption=Attention,
+        fill=\AttentionColor,
+        opacity=0.8,
+        radius=1.8,
+        logo=$\alpha$
+        }
+    };
+
+\draw [connection]  (qkv1-east)    -- node {\midarrow} (alpha1-west);
+\draw [copyconnection] (edge_index-north) 
+-- node[pos=0.5,above,sloped] {\small topology} (alpha1-north);
+\pic[shift={(3,0,0)}] at (alpha1-east) 
+    {Box={
+        name=messages1,
+        caption=Messages,
+        zlabel=522 x 2 x 64,
+        fill=\AttentionColor,
+        opacity=0.6,
+        height=25,
+        width=3,
+        depth=30
+        }
+    };
+
+\draw [connection]  (alpha1-east)    -- node {\midarrow} (messages1-west);
+\pic[shift={(3,0,0)}] at (messages1-east) 
+    {Box={
+        name=head_avg1,
+        caption=Head Average,
+        zlabel=522 x 64,
+        fill=\ConvColor,
+        opacity=0.7,
+        height=20,
+        width=2.5,
+        depth=25
+        }
+    };
+
+\draw [connection]  (messages1-east)    -- node {\midarrow} (head_avg1-west);
+\pic[shift={(0,-12,0)}] at (head_avg1-south) 
+    {Box={
+        name=skip1,
+        caption=Skip Connection,
+        zlabel=522 x 64,
+        fill=\PoolColor,
+        opacity=0.6,
+        height=15,
+        width=2,
+        depth=20
+        }
+    };
+
+\draw [connection]  (node_features-east)    -- node {\midarrow} (skip1-west);
+\pic[shift={(2,0,0)}] at (head_avg1-east) 
+    {Ball={
+        name=h1_output,
+        caption=Residual Add,
+        fill=\FcColor,
+        opacity=0.8,
+        radius=2,
+        logo=$+$
+        }
+    };
+
+\draw [connection]  (head_avg1-east)    -- node {\midarrow} (h1_output-west);
+
+\draw [connection]  (skip1-east)    -- node {\midarrow} (h1_output-west);
+
+\end{tikzpicture}
+\end{document}
