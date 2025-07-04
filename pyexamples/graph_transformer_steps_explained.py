@@ -196,6 +196,67 @@ def to_ResidualAdd(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2.5, 
     };
 """
 
+# --- NEW: basic post-processing blocks (BatchNorm, GELU, Dropout) ---
+
+def to_BatchNorm(name, offset="(0,0,0)", to="(0,0,0)", width=1.2, height=18, depth=18):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption=BatchNorm,
+        fill=\FcColor,
+        opacity=0.6,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
+def to_GELU(name, offset="(0,0,0)", to="(0,0,0)", width=1, height=16, depth=16):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption=GELU,
+        fill=\FcReluColor,
+        opacity=0.8,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
+def to_Dropout(name, offset="(0,0,0)", to="(0,0,0)", width=0.8, height=14, depth=14):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption=Dropout,
+        fill=\PoolColor,
+        opacity=0.4,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
+# --- NEW: Linear block ---
+
+def to_Linear(name, in_dim, out_dim, offset="(0,0,0)", to="(0,0,0)", width=2, height=18, depth=15):
+    return r"""\pic[shift={"""+ offset +"""}] at """+ to +r""" 
+    {Box={
+        name=""" + name +r""",
+        caption=Linear,
+        zlabel="""+ str(out_dim) +r""",
+        fill=\FcColor,
+        opacity=0.8,
+        height="""+ str(height) +r""",
+        width="""+ str(width) +r""",
+        depth="""+ str(depth) +r"""
+        }
+    };
+"""
+
 # Build the complete architecture following the table exactly
 arch = [
     to_head('..'),
@@ -228,26 +289,11 @@ arch.append(
     to_EdgeIndex(
         "edge_index",
         NUM_EDGES,
-        offset="(0,8,0)",
+        offset="(0,4,0)",
         to="(node_features-north)",
         width=1,
         height=8,
         depth=12
-    )
-)
-
-# ===== STEP 0'': e (edge_attr) - (5 x d_e) =====
-print("Step 0'': Edge attributes (5 x d_e) - Optional edge features")
-arch.append(
-    to_EdgeInput(
-        "edge_attr",
-        NUM_EDGES,
-        EDGE_DIM,
-        offset="(0,-8,0)",
-        to="(node_features-south)",
-        width=2,
-        height=12,
-        depth=18
     )
 )
 
@@ -270,27 +316,6 @@ arch.append(
 )
 arch.append(to_connection(prev_layer, qkv1_name))
 
-# ===== STEP 1': e -> W_6 -> reshape (5 x 2 x 32) =====
-print("Step 1': Edge -> W_6 -> reshape (5 x 2 x 32) - Added to K_j, V_j")
-edge_transform1_name = "edge_w6_1"
-arch.append(
-    to_EdgeTransform(
-        edge_transform1_name,
-        EDGE_DIM,
-        D_HEAD_L1,
-        NUM_HEADS_L1,
-        offset="(2,-6,0)",
-        to=f"({qkv1_name}-south)",
-        width=1.5,
-        height=15,
-        depth=12
-    )
-)
-arch.append(to_connection("edge_attr", edge_transform1_name))
-
-# LATERAL CONNECTION: Edge features to K,V
-arch.append(to_lateral_connection(edge_transform1_name, qkv1_name, "add to K,V", 0.7))
-
 # ===== STEP 2: α₁ coeficientes de atención (5 × 2) =====
 print("Step 2: α₁ coeficientes de atención (5 × 2)")
 attention1_name = "alpha1"
@@ -309,7 +334,7 @@ arch.append(
 arch.append(to_connection(qkv1_name, attention1_name))
 
 # LATERAL CONNECTION: edge_index provides topology
-arch.append(to_lateral_connection("edge_index", attention1_name, "topology", 0.5))
+arch.append(to_lateral_connection("edge_index", attention1_name, "topology", 0.3))
 
 # ===== STEP 2': m₁ mensajes agregados (Σ α·V) - (522 × 2 × 64) =====
 print("Step 2': m₁ mensajes agregados (Σ α·V) - (522 × 2 × 64)")
@@ -354,7 +379,7 @@ arch.append(
         skip1_name,
         NUM_NODES,
         HIDDEN_DIM,
-        offset="(0,-12,0)",
+        offset="(0,-6,0)",
         to=f"({head_avg1_name}-south)",
         width=2,
         height=15,
@@ -381,9 +406,167 @@ arch.append(
 arch.append(to_connection(head_avg1_name, h1_name))
 arch.append(to_connection(skip1_name, h1_name))
 
+# ===== STEP 4: BatchNorm 1 → GELU → Dropout =====
+print("Step 4: BatchNorm 1 → GELU → Dropout")
+arch.append(to_BatchNorm("BatchNorm_1", offset="(3,0,0)", to=f"({h1_name}-east)"))
+arch.append(to_connection(h1_name, "BatchNorm_1"))
+arch.append(to_GELU("GELU_1", offset="(2,0,0)", to=f"(BatchNorm_1-east)"))
+arch.append(to_Dropout("Dropout_1", offset="(2,0,0)", to=f"(GELU_1-east)"))
+arch.append(to_connection("BatchNorm_1", "GELU_1"))
+arch.append(to_connection("GELU_1", "Dropout_1"))
+
+# ===== STEP 5: Q/K/V layer 2 -> reshape (522 x 1 x 64) =====
+print("Step 5: Q/K/V layer 2 reshape (522 x 1 x 64)")
+prev_layer2 = "Dropout_1"
+qkv2_name = "qkv2"
+arch.append(
+    to_QKV_WithEdges(
+        qkv2_name,
+        HIDDEN_DIM,
+        D_HEAD_L2,
+        NUM_HEADS_L2,
+        offset="(4,0,0)",
+        to=f"({prev_layer2}-east)",
+        width=2.5,
+        height=25,
+        depth=30
+    )
+)
+arch.append(to_connection(prev_layer2, qkv2_name))
+
+# ===== STEP 6: α₂ coeficientes de atención (5 × 1) =====
+print("Step 6: α₂ coeficientes de atención (5 × 1)")
+attention2_name = "alpha2"
+arch.append(
+    to_AttentionCoeff(
+        attention2_name,
+        NUM_EDGES,
+        NUM_HEADS_L2,
+        offset="(3,0,0)",
+        to=f"({qkv2_name}-east)",
+        width=1.8,
+        height=12,
+        depth=18
+    )
+)
+arch.append(to_connection(qkv2_name, attention2_name))
+
+# ===== STEP 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64) =====
+print("Step 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64)")
+messages2_name = "messages2"
+arch.append(
+    to_Messages(
+        messages2_name,
+        NUM_NODES,
+        NUM_HEADS_L2,
+        D_HEAD_L2,
+        offset="(3,0,0)",
+        to=f"({attention2_name}-east)",
+        width=3,
+        height=25,
+        depth=30
+    )
+)
+arch.append(to_connection(attention2_name, messages2_name))
+
+# ===== STEP 7: Promedio cabezas (concat=False) - (522 × 64) =====
+print("Step 7: Promedio cabezas (concat=False) - (522 × 64)")
+head_avg2_name = "head_avg2"
+arch.append(
+    to_HeadAverage(
+        head_avg2_name,
+        NUM_NODES,
+        HIDDEN_DIM,
+        offset="(3,0,0)",
+        to=f"({messages2_name}-east)",
+        width=2.5,
+        height=20,
+        depth=25
+    )
+)
+arch.append(to_connection(messages2_name, head_avg2_name))
+
+# ===== STEP 7': r₂ skip connection (W₁·h₁) - (522 × 64) =====
+print("Step 7': r₂ skip connection (W₁·h₁) - (522 × 64)")
+skip2_name = "skip2"
+arch.append(
+    to_SkipConnection(
+        skip2_name,
+        NUM_NODES,
+        HIDDEN_DIM,
+        offset="(0,-6,0)",
+        to=f"({head_avg2_name}-south)",
+        width=2,
+        height=15,
+        depth=20
+    )
+)
+arch.append(to_connection(qkv2_name, skip2_name))
+
+# ===== STEP 7'': h₂ = r₂ + m₂ (β desactivado) - (522 × 64) =====
+print("Step 7'': h₂ = r₂ + m₂ (β desactivado) - (522 × 64)")
+h2_name = "h2_output"
+arch.append(
+    to_ResidualAdd(
+        h2_name,
+        NUM_NODES,
+        HIDDEN_DIM,
+        offset="(2,0,0)",
+        to=f"({head_avg2_name}-east)",
+        width=2,
+        height=18,
+        depth=20
+    )
+)
+arch.append(to_connection(head_avg2_name, h2_name))
+arch.append(to_connection(skip2_name, h2_name))
+
+# ===== STEP 8: BatchNorm 2 =====
+print("Step 8: BatchNorm 2")
+arch.append(to_BatchNorm("BatchNorm_2", offset="(3,0,0)", to=f"({h2_name}-east)"))
+arch.append(to_connection(h2_name, "BatchNorm_2"))
+
+# ===== STEP 9: Linear 64 -> 32 =====
+print("Step 9: Linear 64 -> 32")
+linear1_name = "linear1"
+arch.append(
+    to_Linear(
+        linear1_name,
+        HIDDEN_DIM,
+        HIDDEN_DIM//2,
+        offset="(3,0,0)",
+        to=f"(BatchNorm_2-east)",
+        width=2,
+        height=18,
+        depth=15
+    )
+)
+arch.append(to_connection("BatchNorm_2", linear1_name))
+
+# ===== STEP 10: Linear 32 -> 1 (ŷ) =====
+print("Step 10: Linear 32 -> 1 (ŷ)")
+final_linear = "linear_out"
+arch.append(
+    to_Linear(
+        final_linear,
+        HIDDEN_DIM//2,
+        NUM_TARGETS,
+        offset="(3,0,0)",
+        to=f"({linear1_name}-east)",
+        width=2,
+        height=16,
+        depth=10
+    )
+)
+arch.append(to_connection(linear1_name, final_linear))
+
+# SoftMax / Predictions
+arch.append(to_SoftMax("predictions", NUM_TARGETS, offset="(2,0,0)", to=f"({final_linear}-east)", width=2, height=20, depth=8, caption="Pred"))
+arch.append(to_connection(final_linear, "predictions"))
+
 arch.append(to_end())
 
-print("Step 8 complete - testing: complete first layer with attention + messages + skip connection...")
+print("Step 4 complete - first layer post-processing added.")
 
 def main():
     namefile = str(sys.argv[1]).split('.')[0]

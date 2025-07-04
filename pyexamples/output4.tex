@@ -44,7 +44,7 @@
         depth=45
         }
     };
-\pic[shift={(0,8,0)}] at (node_features-north) 
+\pic[shift={(0,4,0)}] at (node_features-north) 
     {Box={
         name=edge_index,
         caption=Edge Indexes,
@@ -54,18 +54,6 @@
         height=8,
         width=1,
         depth=12
-        }
-    };
-\pic[shift={(0,-8,0)}] at (node_features-south) 
-    {Box={
-        name=edge_attr,
-        caption=Edge Features,
-        zlabel=64,
-        fill=\EdgeColor,
-        opacity=0.8,
-        height=12,
-        width=2,
-        depth=18
         }
     };
 \pic[shift={(4,0,0)}] at (node_features-east) 
@@ -81,22 +69,6 @@
     };
 
 \draw [connection]  (node_features-east)    -- node {\midarrow} (qkv1-west);
-\pic[shift={(2,-6,0)}] at (qkv1-south) 
-    {Box={
-        name=edge_w6_1,
-        caption=Edge Transform,
-        zlabel=128,
-        fill=\EdgeColor,
-        opacity=0.7,
-        height=15,
-        width=1.5,
-        depth=12
-        }
-    };
-
-\draw [connection]  (edge_attr-east)    -- node {\midarrow} (edge_w6_1-west);
-\draw [copyconnection] (edge_w6_1-north) 
--- node[pos=0.7,above,sloped] {\small add to K,V} (qkv1-north);
 \pic[shift={(3,0,0)}] at (qkv1-east) 
     {Ball={
         name=alpha1,
@@ -110,7 +82,7 @@
 
 \draw [connection]  (qkv1-east)    -- node {\midarrow} (alpha1-west);
 \draw [copyconnection] (edge_index-north) 
--- node[pos=0.5,above,sloped] {\small topology} (alpha1-north);
+-- node[pos=0.3,above,sloped] {\small topology} (alpha1-north);
 \pic[shift={(3,0,0)}] at (alpha1-east) 
     {Box={
         name=messages1,
@@ -139,7 +111,7 @@
     };
 
 \draw [connection]  (messages1-east)    -- node {\midarrow} (head_avg1-west);
-\pic[shift={(0,-12,0)}] at (head_avg1-south) 
+\pic[shift={(0,-6,0)}] at (head_avg1-south) 
     {Box={
         name=skip1,
         caption=Skip Connection,
@@ -167,6 +139,183 @@
 \draw [connection]  (head_avg1-east)    -- node {\midarrow} (h1_output-west);
 
 \draw [connection]  (skip1-east)    -- node {\midarrow} (h1_output-west);
+\pic[shift={(3,0,0)}] at (h1_output-east) 
+    {Box={
+        name=BatchNorm_1,
+        caption=BatchNorm,
+        fill=\FcColor,
+        opacity=0.6,
+        height=18,
+        width=1.2,
+        depth=18
+        }
+    };
+
+\draw [connection]  (h1_output-east)    -- node {\midarrow} (BatchNorm_1-west);
+\pic[shift={(2,0,0)}] at (BatchNorm_1-east) 
+    {Box={
+        name=GELU_1,
+        caption=GELU,
+        fill=\FcReluColor,
+        opacity=0.8,
+        height=16,
+        width=1,
+        depth=16
+        }
+    };
+\pic[shift={(2,0,0)}] at (GELU_1-east) 
+    {Box={
+        name=Dropout_1,
+        caption=Dropout,
+        fill=\PoolColor,
+        opacity=0.4,
+        height=14,
+        width=0.8,
+        depth=14
+        }
+    };
+
+\draw [connection]  (BatchNorm_1-east)    -- node {\midarrow} (GELU_1-west);
+
+\draw [connection]  (GELU_1-east)    -- node {\midarrow} (Dropout_1-west);
+\pic[shift={(4,0,0)}] at (Dropout_1-east) 
+    {RightBandedBox={
+        name=qkv2,
+        caption=QKV Transform,
+        fill=\ConvColor,
+        bandfill=\ConvReluColor,
+        height=25,
+        width={2.5,2.5,2.5},
+        depth=30
+        }
+    };
+
+\draw [connection]  (Dropout_1-east)    -- node {\midarrow} (qkv2-west);
+\pic[shift={(3,0,0)}] at (qkv2-east) 
+    {Ball={
+        name=alpha2,
+        caption=Attention,
+        fill=\AttentionColor,
+        opacity=0.8,
+        radius=1.8,
+        logo=$\alpha$
+        }
+    };
+
+\draw [connection]  (qkv2-east)    -- node {\midarrow} (alpha2-west);
+\pic[shift={(3,0,0)}] at (alpha2-east) 
+    {Box={
+        name=messages2,
+        caption=Messages,
+        zlabel=522 x 1 x 64,
+        fill=\AttentionColor,
+        opacity=0.6,
+        height=25,
+        width=3,
+        depth=30
+        }
+    };
+
+\draw [connection]  (alpha2-east)    -- node {\midarrow} (messages2-west);
+\pic[shift={(3,0,0)}] at (messages2-east) 
+    {Box={
+        name=head_avg2,
+        caption=Head Average,
+        zlabel=522 x 64,
+        fill=\ConvColor,
+        opacity=0.7,
+        height=20,
+        width=2.5,
+        depth=25
+        }
+    };
+
+\draw [connection]  (messages2-east)    -- node {\midarrow} (head_avg2-west);
+\pic[shift={(0,-6,0)}] at (head_avg2-south) 
+    {Box={
+        name=skip2,
+        caption=Skip Connection,
+        zlabel=522 x 64,
+        fill=\PoolColor,
+        opacity=0.6,
+        height=15,
+        width=2,
+        depth=20
+        }
+    };
+
+\draw [connection]  (qkv2-east)    -- node {\midarrow} (skip2-west);
+\pic[shift={(2,0,0)}] at (head_avg2-east) 
+    {Ball={
+        name=h2_output,
+        caption=Residual Add,
+        fill=\FcColor,
+        opacity=0.8,
+        radius=2,
+        logo=$+$
+        }
+    };
+
+\draw [connection]  (head_avg2-east)    -- node {\midarrow} (h2_output-west);
+
+\draw [connection]  (skip2-east)    -- node {\midarrow} (h2_output-west);
+\pic[shift={(3,0,0)}] at (h2_output-east) 
+    {Box={
+        name=BatchNorm_2,
+        caption=BatchNorm,
+        fill=\FcColor,
+        opacity=0.6,
+        height=18,
+        width=1.2,
+        depth=18
+        }
+    };
+
+\draw [connection]  (h2_output-east)    -- node {\midarrow} (BatchNorm_2-west);
+\pic[shift={(3,0,0)}] at (BatchNorm_2-east) 
+    {Box={
+        name=linear1,
+        caption=Linear,
+        zlabel=32,
+        fill=\FcColor,
+        opacity=0.8,
+        height=18,
+        width=2,
+        depth=15
+        }
+    };
+
+\draw [connection]  (BatchNorm_2-east)    -- node {\midarrow} (linear1-west);
+\pic[shift={(3,0,0)}] at (linear1-east) 
+    {Box={
+        name=linear_out,
+        caption=Linear,
+        zlabel=1,
+        fill=\FcColor,
+        opacity=0.8,
+        height=16,
+        width=2,
+        depth=10
+        }
+    };
+
+\draw [connection]  (linear1-east)    -- node {\midarrow} (linear_out-west);
+
+\pic[shift={(2,0,0)}] at (linear_out-east) 
+    {Box={
+        name=predictions,
+        caption=Pred,
+        xlabel={{" ","dummy"}},
+        zlabel=1,
+        fill=\SoftmaxColor,
+        opacity=0.8,
+        height=20,
+        width=2,
+        depth=8
+        }
+    };
+
+\draw [connection]  (linear_out-east)    -- node {\midarrow} (predictions-west);
 
 \end{tikzpicture}
 \end{document}
