@@ -169,7 +169,8 @@ def to_HeadAverage(name, nodes, dim, offset="(0,0,0)", to="(0,0,0)", width=2.5, 
     {Box={
         name=""" + name +r""",
         caption=Heads Avg,
-        zlabel="""+ str(nodes) +r""" x """+ str(dim) +r""",
+        xlabel={{"""+ str(nodes) +""",}},
+        zlabel="""+ str(dim) +r""",
         fill=\ConvColor,
         opacity=0.7,
         height="""+ str(height) +r""",
@@ -305,7 +306,7 @@ arch.append(
         height=45,
         width=6,
         depth=45,
-        caption="Node Features"
+        caption="Station Graph"
     )
 )
 
@@ -390,7 +391,7 @@ arch.append(
         HIDDEN_DIM,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({messages1_name}-east)",
-        width=2.5,
+        width=4,
         height=20,
         depth=25
     )
@@ -508,7 +509,7 @@ arch.append(
         HIDDEN_DIM,
         offset=f"({HORIZONTAL_SPACING},0,0)",
         to=f"({messages2_name}-east)",
-        width=2.5,
+        width=4,
         height=20,
         depth=25
     )
