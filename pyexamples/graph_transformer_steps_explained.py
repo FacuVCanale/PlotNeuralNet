@@ -185,7 +185,8 @@ def to_Messages(name, nodes, heads, dim, offset="(0,0,0)", to="(0,0,0)", width=3
     {Box={
         name=""" + name +r""",
         caption=Messages ("""+ str(heads) +r""" heads),
-        zlabel="""+ str(nodes) +r""" x """+ str(heads) +r""" x """+ str(dim) +r""",
+        xlabel={{"""+ str(nodes) +""",}},
+        zlabel="""+ str(dim) +r""",
         fill=\AttentionColor,
         opacity=0.6,
         height="""+ str(height) +r""",
