@@ -35,33 +35,95 @@
     };
 
 \pic[shift={(3,0,0)}] at (input-east) 
-    {Box={
-        name=trconv1,
-        caption=T.Conv 2 heads\\[-25cm]~,
-        xlabel={{22,}},
-        zlabel=64,
+    {RightBandedBox={
+        name=qkv1,
+        caption=Q K V\\Transform,
         fill=\ConvColor,
-        height=30,
-        width=4,
-        depth=30
+        bandfill=\ConvReluColor,
+        height=25,
+        width={1.5,1.5,1.5},
+        depth=25
         }
     };
 
-\draw [connection]  (input-east)    -- node {\midarrow} (trconv1-west);
+\draw [connection]  (input-east)    -- node {\midarrow} (qkv1-west);
 
-\pic[shift={(1.5,0,0)}] at (trconv1-east) 
+\pic[shift={(2,0,0)}] at (qkv1-east) 
+    {RightBandedBox={
+        name=mha1,
+        caption=Multi-Head\\Attention,
+        fill=\ConvColor,
+        bandfill=\ConvReluColor,
+        height=22,
+        width={1.5,1.5},
+        depth=22
+        }
+    };
+
+\draw [connection]  (qkv1-east)    -- node {\midarrow} (mha1-west);
+
+\pic[shift={(2,0,0)}] at (mha1-east) 
+    {Box={
+        name=avg1,
+        caption=Average\\ 2 heads,
+        xlabel={{" ","dummy"}},
+        fill=\SumColor,
+        opacity=0.7,
+        height=18,
+        width=2,
+        depth=18
+        }
+    };
+
+\draw [connection]  (mha1-east)    -- node {\midarrow} (avg1-west);
+
+\pic[shift={(2,0,0)}] at (avg1-east) 
+    {Box={
+        name=proj1,
+        caption=Linear\\64x64,
+        xlabel={{64,}},
+        zlabel=64,
+        fill=\FcColor,
+        height=18,
+        width=2,
+        depth=15
+        }
+    };
+
+\draw [connection]  (avg1-east)    -- node {\midarrow} (proj1-west);
+
+\pic[shift={(1.5,0,0)}] at (proj1-east) 
+    {Ball={
+        name=residual1,
+        fill=\SumColor,
+        opacity=0.8,
+        radius=2,
+        logo=$+$
+        }
+    };
+
+\draw [connection]  (proj1-east)    -- node {\midarrow} (residual1-west);
+
+\path (input-southeast) -- (input-northeast) coordinate[pos=1.25] (input-top) ;
+\path (residual1-south)  -- (residual1-north)  coordinate[pos=1.25] (residual1-top) ;
+\draw [copyconnection]  (input-northeast)  
+-- node {\copymidarrow}(input-top)
+-- node {\copymidarrow}(residual1-top)
+-- node {\copymidarrow} (residual1-north);
+
+\pic[shift={(2,0,0)}] at (residual1-east) 
     {Box={
         name=bn1,
         caption=BatchNorm,
         fill=\FcColor,
         opacity=0.6,
-        height=25,
+        height=18,
         width=1,
-        depth=25
+        depth=18
         }
     };
 
-\draw [connection]  (trconv1-east)    -- node {\midarrow} (bn1-west);
+\draw [connection]  (residual1-east)    -- node {\midarrow} (bn1-west);
 
 \pic[shift={(1.2,0,0)}] at (bn1-east) 
     {Box={
@@ -70,9 +132,9 @@
         xlabel={{" ","dummy"}},
         fill=\FcReluColor,
         opacity=0.8,
-        height=20,
+        height=15,
         width=1,
-        depth=20
+        depth=15
         }
     };
 
@@ -85,57 +147,149 @@
         xlabel={{" ","dummy"}},
         fill=\PoolColor,
         opacity=0.4,
-        height=15,
+        height=12,
         width=0.5,
-        depth=15
+        depth=12
         }
     };
 
 \draw [connection]  (gelu1-east)    -- node {\midarrow} (dropout1-west);
 
 \pic[shift={(3,0,0)}] at (dropout1-east) 
-    {Box={
-        name=trconv_final,
-        caption=T.Conv 1 head\\[-25cm]~,
-        xlabel={{64,}},
-        zlabel=64,
+    {RightBandedBox={
+        name=qkv2,
+        caption=Q K V\\Transform,
         fill=\ConvColor,
-        height=25,
-        width=4,
-        depth=25
-        }
-    };
-
-\draw [connection]  (dropout1-east)    -- node {\midarrow} (trconv_final-west);
-
-\pic[shift={(1.5,0,0)}] at (trconv_final-east) 
-    {Box={
-        name=bn_final,
-        caption=BatchNorm,
-        fill=\FcColor,
-        opacity=0.6,
+        bandfill=\ConvReluColor,
         height=20,
-        width=1,
+        width={1.5,1.5,1.5},
         depth=20
         }
     };
 
-\draw [connection]  (trconv_final-east)    -- node {\midarrow} (bn_final-west);
+\draw [connection]  (dropout1-east)    -- node {\midarrow} (qkv2-west);
 
-\pic[shift={(3,0,0)}] at (bn_final-east) 
+\pic[shift={(2,0,0)}] at (qkv2-east) 
+    {RightBandedBox={
+        name=mha2,
+        caption=Multi-Head\\Attention,
+        fill=\ConvColor,
+        bandfill=\ConvReluColor,
+        height=18,
+        width={1.5,1.5},
+        depth=18
+        }
+    };
+
+\draw [connection]  (qkv2-east)    -- node {\midarrow} (mha2-west);
+
+\pic[shift={(2,0,0)}] at (mha2-east) 
+    {Box={
+        name=avg2,
+        caption=Average\\ 2 heads,
+        xlabel={{" ","dummy"}},
+        fill=\SumColor,
+        opacity=0.7,
+        height=15,
+        width=2,
+        depth=15
+        }
+    };
+
+\draw [connection]  (mha2-east)    -- node {\midarrow} (avg2-west);
+
+\pic[shift={(2,0,0)}] at (avg2-east) 
+    {Box={
+        name=proj2,
+        caption=Linear\\64x64,
+        xlabel={{64,}},
+        zlabel=64,
+        fill=\FcColor,
+        height=15,
+        width=2,
+        depth=12
+        }
+    };
+
+\draw [connection]  (avg2-east)    -- node {\midarrow} (proj2-west);
+
+\pic[shift={(1.5,0,0)}] at (proj2-east) 
+    {Ball={
+        name=residual2,
+        fill=\SumColor,
+        opacity=0.8,
+        radius=1.8,
+        logo=$+$
+        }
+    };
+
+\draw [connection]  (proj2-east)    -- node {\midarrow} (residual2-west);
+
+\path (dropout1-southeast) -- (dropout1-northeast) coordinate[pos=1.25] (dropout1-top) ;
+\path (residual2-south)  -- (residual2-north)  coordinate[pos=1.25] (residual2-top) ;
+\draw [copyconnection]  (dropout1-northeast)  
+-- node {\copymidarrow}(dropout1-top)
+-- node {\copymidarrow}(residual2-top)
+-- node {\copymidarrow} (residual2-north);
+
+\pic[shift={(2,0,0)}] at (residual2-east) 
+    {Box={
+        name=bn2,
+        caption=BatchNorm,
+        fill=\FcColor,
+        opacity=0.6,
+        height=15,
+        width=1,
+        depth=15
+        }
+    };
+
+\draw [connection]  (residual2-east)    -- node {\midarrow} (bn2-west);
+
+\pic[shift={(1.2,0,0)}] at (bn2-east) 
+    {Box={
+        name=gelu2,
+        caption=GELU,
+        xlabel={{" ","dummy"}},
+        fill=\FcReluColor,
+        opacity=0.8,
+        height=12,
+        width=1,
+        depth=12
+        }
+    };
+
+\draw [connection]  (bn2-east)    -- node {\midarrow} (gelu2-west);
+
+\pic[shift={(1.0,0,0)}] at (gelu2-east) 
+    {Box={
+        name=dropout2,
+        caption=Dropout\\0.05,
+        xlabel={{" ","dummy"}},
+        fill=\PoolColor,
+        opacity=0.4,
+        height=10,
+        width=0.5,
+        depth=10
+        }
+    };
+
+\draw [connection]  (gelu2-east)    -- node {\midarrow} (dropout2-west);
+
+\pic[shift={(3,0,0)}] at (dropout2-east) 
     {Box={
         name=mlp1,
         caption=Linear\\64x32,
         xlabel={{64,}},
         zlabel=32,
         fill=\FcColor,
-        height=20,
+        height=15,
         width=2.5,
-        depth=15
+        depth=12
         }
     };
 
-\draw [connection]  (bn_final-east)    -- node {\midarrow} (mlp1-west);
+\draw [connection]  (dropout2-east)    -- node {\midarrow} (mlp1-west);
 
 \pic[shift={(1.2,0,0)}] at (mlp1-east) 
     {Box={
@@ -144,9 +298,9 @@
         xlabel={{" ","dummy"}},
         fill=\FcReluColor,
         opacity=0.8,
-        height=15,
+        height=12,
         width=1,
-        depth=12
+        depth=10
         }
     };
 
@@ -159,9 +313,9 @@
         xlabel={{" ","dummy"}},
         fill=\PoolColor,
         opacity=0.4,
-        height=12,
+        height=10,
         width=0.5,
-        depth=10
+        depth=8
         }
     };
 
@@ -174,9 +328,9 @@
         xlabel={{32,}},
         zlabel=1,
         fill=\FcColor,
-        height=15,
+        height=12,
         width=2,
-        depth=8
+        depth=6
         }
     };
 
@@ -190,9 +344,9 @@
         zlabel=1,
         fill=\SoftmaxColor,
         opacity=0.8,
-        height=40,
+        height=35,
         width=2,
-        depth=8
+        depth=6
         }
     };
 
