@@ -121,8 +121,22 @@ def to_EdgeTransform(name, in_dim, out_dim, heads, offset="(0,0,0)", to="(0,0,0)
 """
 
 def to_lateral_connection(from_node, to_node, label="", pos=0.5):
+    label_node = ""
+    if label:
+        label_node = r"""node[pos=""" + str(pos) + r""",above] {\small """ + label + r"""}"""
+        
     return r"""\draw [connection] (""" + from_node +r"""-east)
--| node[pos=""" + str(pos) + """] {\midarrow} node[pos=""" + str(pos) + r""",above] {\small """ + label + r"""} (""" + to_node +r"""-north);
+-| node[pos=""" + str(pos) + """] {\midarrow} """ + label_node + r""" (""" + to_node +r"""-north);
+"""
+
+def to_residual_connection(from_node, to_node, pos=0.6):
+    return r"""\draw [connection] (""" + from_node +r"""-east)
+-| node[pos=""" + str(pos) + """] {\midarrow} (""" + to_node +r"""-south);
+"""
+
+def to_skip_input_connection(from_node, to_node, pos=0.6):
+    return r"""\draw [connection] (""" + from_node +r"""-south)
+|- node[pos=""" + str(pos) + """] {\midarrow} (""" + to_node +r"""-west);
 """
 
 def to_AttentionCoeff(name, num_edges, heads, offset="(0,0,0)", to="(0,0,0)", width=2, height=12, depth=18):
@@ -386,7 +400,7 @@ arch.append(
         depth=20
     )
 )
-arch.append(to_connection("node_features", skip1_name))
+arch.append(to_skip_input_connection("node_features", skip1_name))
 
 # ===== STEP 3'': h₁ = r₁ + m₁ (β desactivado) - (522 × 64) =====
 print("Step 3'': h₁ = r₁ + m₁ (β desactivado) - (522 × 64)")
@@ -404,7 +418,7 @@ arch.append(
     )
 )
 arch.append(to_connection(head_avg1_name, h1_name))
-arch.append(to_connection(skip1_name, h1_name))
+arch.append(to_residual_connection(skip1_name, h1_name))
 
 # ===== STEP 4: BatchNorm 1 → GELU → Dropout =====
 print("Step 4: BatchNorm 1 → GELU → Dropout")
@@ -450,6 +464,9 @@ arch.append(
     )
 )
 arch.append(to_connection(qkv2_name, attention2_name))
+
+# LATERAL CONNECTION: edge_index provides topology
+arch.append(to_lateral_connection("edge_index", attention2_name, "topology", 0.3))
 
 # ===== STEP 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64) =====
 print("Step 6': m₂ mensajes agregados (Σ α·V) - (522 × 1 × 64)")
@@ -501,7 +518,8 @@ arch.append(
         depth=20
     )
 )
-arch.append(to_connection(qkv2_name, skip2_name))
+# Connect processed features to the second skip connection using the skip input style
+arch.append(to_skip_input_connection("Dropout_1", skip2_name))
 
 # ===== STEP 7'': h₂ = r₂ + m₂ (β desactivado) - (522 × 64) =====
 print("Step 7'': h₂ = r₂ + m₂ (β desactivado) - (522 × 64)")
@@ -519,7 +537,7 @@ arch.append(
     )
 )
 arch.append(to_connection(head_avg2_name, h2_name))
-arch.append(to_connection(skip2_name, h2_name))
+arch.append(to_residual_connection(skip2_name, h2_name))
 
 # ===== STEP 8: BatchNorm 2 =====
 print("Step 8: BatchNorm 2")
